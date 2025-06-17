@@ -2,33 +2,34 @@
 export CUDA_VISIBLE_DEVICES=0
 datasets_path=/home/datasets/
 work_dir=./work_dir/
-datasets_name="ceval_val_cmcc ceval cmmlu cmb medmcqa medqa mmlu"
-csv_name=LLaMA-Factory/evaluation/
+# Using English evaluation datasets
+datasets_name="mmlu"
 log_dir=./cali_log/
+
 for i in $datasets_name;
 do
-    if [ "$i" == "ceval_val_cmcc" ]; then
-        calib_dataset_path=${datasets_path}
-    else
-        calib_dataset_path=${datasets_path}${csv_name}$i/
-    fi
+    calib_dataset_path=${datasets_path}${i}/
     save_dir=${work_dir}$i/pth/
-    [ ! -d ${save_dir} ] && mkdir ${save_dir}
-    [ ! -d ${log_dir} ] && mkdir ${log_dir}
-    log=${log_dir}llama3-8b-datasets_$i.log
+    [ ! -d ${save_dir} ] && mkdir -p ${save_dir}
+    [ ! -d ${log_dir} ] && mkdir -p ${log_dir}
+    
+    log=${log_dir}llama2-7b-datasets_$i.log
     echo "i=$i, calib_dataset_path=${calib_dataset_path}, save_dir=${save_dir}, log=${log}"
-    python calibrate.py /home/model_weights/Llama3-Chinese-8B-Instruct/ \
+    
+    # Using Llama-2-7b-hf model instead of Chinese model
+    python calibrate.py meta-llama/Llama-2-7b-hf \
             --calib_dataset $i \
-            --dataset_path  ${calib_dataset_path} \
+            --dataset_path ${calib_dataset_path} \
             --work_dir ${save_dir} \
-            --device cuda\
+            --device cuda \
             --calib_samples 128 \
-            --calib_seqlen 2048  2>&1|tee ${log} 
-    log=${log_dir}llama3-8b-datasets_${i}_json.log
+            --calib_seqlen 2048 2>&1 | tee ${log} 
+    
+    log=${log_dir}llama2-7b-datasets_${i}_json.log
     save_dir_path=${work_dir}$i/
     python export_kv_params.py \
         --work_dir ${save_dir} \
         --kv_params_dir ${save_dir_path} \
-        --quant_group 128  2>&1|tee ${log} 
+        --quant_group 128 2>&1 | tee ${log} 
 done
 
