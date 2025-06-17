@@ -21,12 +21,14 @@ LAYER_TYPE_MAP = {
     'QWenLMHeadModel': 'QWenBlock',
     'BaiChuanForCausalLM': 'DecoderLayer',
     'LlamaForCausalLM': 'LlamaDecoderLayer',
+    'Qwen2ForCausalLM': 'LlamaDecoderLayer',
 }
 NORM_TYPE_MAP = {
     'InternLMForCausalLM': 'InternLMRMSNorm',
     'QWenLMHeadModel': 'RMSNorm',
     'BaiChuanForCausalLM': 'RMSNorm',
     'LlamaForCausalLM': 'LlamaRMSNorm',
+    'Qwen2ForCausalLM': 'LlamaRMSNorm',
 }
 
 
