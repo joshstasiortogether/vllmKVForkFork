@@ -5,6 +5,7 @@ work_dir=./work_dir/
 datasets_name="ceval_val_cmcc ceval cmmlu cmb medmcqa medqa mmlu"
 csv_name=LLaMA-Factory/evaluation/
 log_dir=./cali_log/
+model_path="$HOME/models/Llama-2-7b-hf"
 
 for i in $datasets_name;
 do
@@ -18,7 +19,7 @@ do
     [ ! -d ${log_dir} ] && mkdir ${log_dir}
     log=${log_dir}llama2-7b-datasets_$i.log
     echo "i=$i, calib_dataset_path=${calib_dataset_path}, save_dir=${save_dir}, log=${log}"
-    python calibrate.py meta-llama/Llama-2-7b-hf \
+    python calibrate.py ${model_path} \
             --calib_dataset $i \
             --dataset_path  ${calib_dataset_path} \
             --work_dir ${save_dir} \
