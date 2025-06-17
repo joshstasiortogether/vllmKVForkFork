@@ -64,6 +64,7 @@ def calibrate(model: str = '/home/model_weights/Llama3-Chinese-8B-Instruct/',
                               `ceval_val_cmcc`, `ceval`, `cmmlu`, `cmb`, `medmcqa`,\
                               `medqa`, `mmlu`'
 
+    print("Loading tokenizer and model...")
     # Load tokenizer and configuration
     tokenizer = AutoTokenizer.from_pretrained(model,
                                               use_fast=False,
@@ -73,15 +74,21 @@ def calibrate(model: str = '/home/model_weights/Llama3-Chinese-8B-Instruct/',
 
     with init_empty_weights():
         # Load model
+        print("Initializing model...")
         model = AutoModelForCausalLM.from_pretrained(model,
                                                      torch_dtype=torch.float16,
                                                      trust_remote_code=True)
-        model.config.use_cache = False
+        model.config.use_cache = True
 
+    print(f"Model type: {type(model).__name__}")
     layer_type = LAYER_TYPE_MAP[type(model).__name__]
     norm_type = NORM_TYPE_MAP[type(model).__name__]
+    print(f"Layer type: {layer_type}")
+    print(f"Norm type: {norm_type}")
 
+    print("Collecting decoder layers...")
     decoder_layers = collect_target_modules(model, layer_type)
+    print(f"Found {len(decoder_layers)} decoder layers")
 
     # Infer device map
     device_map = infer_auto_device_map(model,
@@ -91,6 +98,7 @@ def calibrate(model: str = '/home/model_weights/Llama3-Chinese-8B-Instruct/',
             device_map[name] = 'cpu'
         else:
             device_map[name] = 0
+    print("Loading checkpoint...")
     load_checkpoint_in_model(model, checkpoint, device_map)
 
     print('Loading calibrate dataset ...')
@@ -101,23 +109,28 @@ def calibrate(model: str = '/home/model_weights/Llama3-Chinese-8B-Instruct/',
                                         path=dataset_path)
 
     # Initialize calibration context
+    print("Initializing calibration context...")
     calib_ctx = CalibrationContext(model,
                                    tokenizer,
                                    layer_type=layer_type,
                                    norm_type=norm_type,
                                    device=device)
 
+    print("Starting calibration...")
     with calib_ctx:
         all_data = torch.cat([
             data if isinstance(data, torch.Tensor) else data[0]
             for data in calib_loader
         ]).to(device)
+        print(f"Calibration data shape: {all_data.shape}")
         calib_ctx.calibrate(all_data)
 
     # Create work directory if not exists
+    print("Saving calibration results...")
     work_dir = Path(work_dir)
     work_dir.mkdir(parents=True, exist_ok=True)
     calib_ctx.export(work_dir)
+    print("Calibration complete!")
 
 
 if __name__ == '__main__':
