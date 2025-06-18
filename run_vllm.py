@@ -23,16 +23,16 @@ sampling_params = SamplingParams(temperature=0.8, top_p=0.95, max_tokens=200)
 
 # Configure KV cache quantization
 llm = LLM(
-    model="Qwen/Qwen2.5-7B-Instruct",
-    tokenizer="Qwen/Qwen2.5-7B-Instruct",
+    model="meta-llama/Llama-2-7b",
+    tokenizer="meta-llama/Llama-2-7b",
     dtype="auto",
     max_model_len=8192,
     tensor_parallel_size=1,
     enforce_eager=True,
     # KV cache quantization settings
-    # kv_cache_dtype="int8",  # Enable int8 quantization
-    # kv_quant_group=64,      # Group size for quantization
-    # kv_quant_params_path="./work_dir/kv_cache_scales_quant_group64.json"  # Path to calibrated parameters
+    kv_cache_dtype="int8",  # Enable int8 quantization
+    kv_quant_group=64,      # Group size for quantization
+    kv_quant_params_path="./work_dir/ceval/kv_cache_scales_layer_level.json"  # Path to calibrated parameters
 )
 
 outputs = llm.generate(prompts, sampling_params)
