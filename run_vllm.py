@@ -33,7 +33,7 @@ llm = LLM(
     # KV cache quantization settings
     kv_cache_dtype="int8",  # Enable int8 quantization
     kv_quant_group=64,      # Group size for quantization
-    kv_quant_params_path="examples/int8/work_dir/ceval/kv_cache_scales_layer_level.json"
+    #kv_quant_params_path="examples/int8/work_dir/ceval/kv_cache_scales_layer_level.json"
 
 )
 
