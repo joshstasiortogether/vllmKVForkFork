@@ -1143,7 +1143,7 @@ class GPUModelRunnerBase(ModelRunnerBase[TModelInputForGPU]):
             v_zero_point: Dict[int, Dict[int, float]]
             with open(kv_quant_params_path) as f:
                 context = {
-                    "model_type": model_config.hf_text_config.model_type,
+                    "model_type": model_config.hf_config.model_type,
                     "num_hidden_layers": num_layers,
                 }
                 schema_dct = json.load(f)
