@@ -149,10 +149,8 @@ class CalibrationContext():
         their key/value cache during batched forward passes."""
 
         def _forward(mod, *args, **kwargs):
-
             mod.to(self.device)
-            batch_args, batch_kwargs = split_decoder_layer_inputs(
-                *args, **kwargs)
+            batch_args, batch_kwargs = split_decoder_layer_inputs(*args, **kwargs)
             batch_outputs = []
             samples = len(batch_args)
 
@@ -161,44 +159,31 @@ class CalibrationContext():
             v_obs = KVCacheObserver.find(m_name, group=self.value_obs_group)
 
             for i in range(len(batch_args)):
-
                 if k_obs and v_obs:
                     batch_kwargs[i]['use_cache'] = True
-                    version = parse_version(transformers.__version__)
-                    use_new_cache = type(mod).__name__ == 'LlamaDecoderLayer'
-                    if version > parse_version('4.36.0') and use_new_cache:
-                        from transformers.cache_utils import DynamicCache
-                        batch_kwargs[i]['past_key_value'] = DynamicCache()
-
-                        ori_idx = mod.self_attn.layer_idx
-                        mod.self_attn.layer_idx = 0
-
-                        out = self._ori_forwards[mod](*batch_args[i],
-                                                      **batch_kwargs[i])
-                        mod.self_attn.layer_idx = ori_idx
-
-                        out = list(out)
-                        cache = out.pop(-1)
-
-                        key = cache.key_cache.pop(-1)
-                        value = cache.value_cache.pop(-1)
-
-                        k_obs.observe(key)
-                        v_obs.observe(value)
+                    out = self._ori_forwards[mod](*batch_args[i], **batch_kwargs[i])
+                    out = list(out)
+                    cache = out.pop(-1)
+                    
+                    # Handle both tuple and DynamicCache formats
+                    if isinstance(cache, tuple):
+                        key, value = cache
                     else:
-                        out = self._ori_forwards[mod](*batch_args[i],
-                                                      **batch_kwargs[i])
-                        out = list(out)
-                        key, value = out.pop(-1)
-                        k_obs.observe(key)
-                        v_obs.observe(value)
+                        # For newer transformers versions that return a tensor
+                        key = value = cache
+                        if hasattr(cache, 'key_cache'):
+                            key = cache.key_cache[-1] if len(cache.key_cache) > 0 else cache
+                        if hasattr(cache, 'value_cache'):
+                            value = cache.value_cache[-1] if len(cache.value_cache) > 0 else cache
+
+                    k_obs.observe(key)
+                    v_obs.observe(value)
 
                     del key, value
                     torch.cuda.empty_cache()
                     batch_outputs.append(tuple(out))
                 else:
-                    batch_outputs.append(self._ori_forwards[mod](
-                        *batch_args[i], **batch_kwargs[i]))
+                    batch_outputs.append(self._ori_forwards[mod](*batch_args[i], **batch_kwargs[i]))
 
             outputs = concat_decoder_layer_outputs(batch_outputs)
 
@@ -206,8 +191,7 @@ class CalibrationContext():
             mod.to('cpu')
             torch.cuda.empty_cache()
             max_memory = torch.cuda.max_memory_allocated() / 1024 / 1024 / 1024
-            print(f'{m_name}, samples: {samples}, '
-                  f'max gpu memory: {max_memory:.2f} GB')
+            print(f'{m_name}, samples: {samples}, max gpu memory: {max_memory:.2f} GB')
             return outputs
 
         for layer in self.name2layer.values():
