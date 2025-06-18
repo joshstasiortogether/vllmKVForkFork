@@ -1,33 +1,29 @@
 #!/bin/bash
 export CUDA_VISIBLE_DEVICES=0
-datasets_path=/home/datasets/
 work_dir=./work_dir/
-datasets_name="ceval_val_cmcc ceval cmmlu cmb medmcqa medqa mmlu"
-csv_name=LLaMA-Factory/evaluation/
 log_dir=./cali_log/
-for i in $datasets_name;
-do
-    if [ "$i" == "ceval_val_cmcc" ]; then
-        calib_dataset_path=${datasets_path}
-    else
-        calib_dataset_path=${datasets_path}${csv_name}$i/
-    fi
-    save_dir=${work_dir}$i/pth/
-    [ ! -d ${save_dir} ] && mkdir ${save_dir}
-    [ ! -d ${log_dir} ] && mkdir ${log_dir}
-    log=${log_dir}llama2-7b-datasets_$i.log
-    echo "i=$i, calib_dataset_path=${calib_dataset_path}, save_dir=${save_dir}, log=${log}"
-    python calibrate.py ~/models/LLaMA-2-7B/ \
-            --calib_dataset $i \
-            --dataset_path  ${calib_dataset_path} \
-            --work_dir ${save_dir} \
-            --device cuda\
-            --calib_samples 128 \
-            --calib_seqlen 2048  2>&1|tee ${log} 
-    log=${log_dir}llama2-7b-datasets_${i}_json.log
-    save_dir_path=${work_dir}$i/
-    python export_kv_params.py \
+
+# Using wikitext2 which is a built-in dataset
+dataset="wikitext2"
+save_dir=${work_dir}${dataset}/pth/
+[ ! -d ${save_dir} ] && mkdir -p ${save_dir}
+[ ! -d ${log_dir} ] && mkdir -p ${log_dir}
+
+log=${log_dir}llama2-7b-${dataset}.log
+echo "dataset=${dataset}, save_dir=${save_dir}, log=${log}"
+
+# Run calibration
+python calibrate.py ~/models/LLaMA-2-7B/ \
+        --calib_dataset ${dataset} \
         --work_dir ${save_dir} \
-        --kv_params_dir ${save_dir_path} \
-        --quant_group 128  2>&1|tee ${log} 
-done
+        --device cuda \
+        --calib_samples 128 \
+        --calib_seqlen 2048 2>&1 | tee ${log} 
+
+# Export parameters
+log=${log_dir}llama2-7b-${dataset}_json.log
+save_dir_path=${work_dir}${dataset}/
+python export_kv_params.py \
+    --work_dir ${save_dir} \
+    --kv_params_dir ${save_dir_path} \
+    --quant_group 128 2>&1 | tee ${log}
