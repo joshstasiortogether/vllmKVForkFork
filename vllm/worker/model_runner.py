@@ -60,6 +60,10 @@ from vllm.worker.model_runner_base import (
     _init_attn_metadata_from_tensor_dict,
     _init_sampling_metadata_from_tensor_dict, dump_input_when_exception)
 
+from vllm import _custom_ops as ops
+from vllm.triton_utils import HAS_TRITON
+from vllm.model_executor.models.registry import _TEXT_GENERATION_MODELS
+
 if TYPE_CHECKING:
     from vllm.attention.backends.abstract import AttentionBackend
 
@@ -1116,11 +1120,20 @@ class GPUModelRunnerBase(ModelRunnerBase[TModelInputForGPU]):
         # Remove it when all models support kv cache int8.
         architectures = model_config.hf_config.architectures
         for arch in architectures:
-            if arch not in ["LlamaForCausalLM", "LLaMAForCausalLM","ChatGLMModel"]:
+            # Check if the architecture is directly supported or maps to LLaMA
+            if arch not in ["LlamaForCausalLM", "LLaMAForCausalLM", "ChatGLMModel"] and arch not in _TEXT_GENERATION_MODELS:
                 raise ValueError(
                     "KV CACHE INT8 is not supported for model "
                     f"architectures {arch} for now. Supported architectures: "
                     "LlamaForCausalLM, LLaMAForCausalLM.")
+            # If it maps to LLaMA, check that it's actually using LLaMA
+            if arch in _TEXT_GENERATION_MODELS:
+                module, mapped_arch = _TEXT_GENERATION_MODELS[arch]
+                if mapped_arch != "LlamaForCausalLM":
+                    raise ValueError(
+                        "KV CACHE INT8 is not supported for model "
+                        f"architectures {arch} for now. Supported architectures: "
+                        "LlamaForCausalLM, LLaMAForCausalLM.")
         num_layers = model_config.hf_config.num_hidden_layers
         kv_quant_params = []
         if kv_quant_params_path is not None:
