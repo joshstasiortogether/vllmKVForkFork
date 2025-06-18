@@ -30,9 +30,9 @@ llm = LLM(
     tensor_parallel_size=1,
     enforce_eager=True,
     # KV cache quantization settings
-    kv_cache_dtype="int8",  # Enable int8 quantization
-    kv_quant_group=64,      # Group size for quantization
-    kv_quant_params_path="./work_dir/kv_cache_scales_quant_group64.json"  # Path to calibrated parameters
+    # kv_cache_dtype="int8",  # Enable int8 quantization
+    # kv_quant_group=64,      # Group size for quantization
+    # kv_quant_params_path="./work_dir/kv_cache_scales_quant_group64.json"  # Path to calibrated parameters
 )
 
 outputs = llm.generate(prompts, sampling_params)
