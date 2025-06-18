@@ -176,6 +176,12 @@ class CalibrationContext():
                         if hasattr(cache, 'value_cache'):
                             value = cache.value_cache[-1] if len(cache.value_cache) > 0 else cache
 
+                    # Reshape key and value tensors to match expected dimensions
+                    # From (1, seq_len, hidden_dim) to (seq_len, num_heads, head_dim)
+                    if len(key.shape) == 3 and key.shape[0] == 1:
+                        key = key.squeeze(0).view(-1, self.num_kv_heads, self.head_dim)
+                        value = value.squeeze(0).view(-1, self.num_kv_heads, self.head_dim)
+
                     k_obs.observe(key)
                     v_obs.observe(value)
 
