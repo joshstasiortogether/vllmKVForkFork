@@ -189,7 +189,9 @@ class CalibrationContext():
                     torch.cuda.empty_cache()
                     # Ensure we have at least the hidden states in the output
                     if not out:
-                        out = [None]  # Add placeholder for hidden states if empty
+                        # Use the first argument as hidden states if out is empty
+                        # This is typically what the layer would return if use_cache=False
+                        out = [batch_args[i][0]]
                     batch_outputs.append(tuple(out))
                 else:
                     batch_outputs.append(self._ori_forwards[mod](*batch_args[i], **batch_kwargs[i]))
