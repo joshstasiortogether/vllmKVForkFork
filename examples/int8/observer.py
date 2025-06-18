@@ -116,6 +116,7 @@ class KVCacheObserver(GlobalAvailMixin):
         Args:
             x : Input tensor
         """
+        print("🔍 key.shape:", key.shape)
         # Handle different tensor shapes
         if len(x.shape) == 4:
             # Standard shape: (bs, heads, seqlen, dims) or (bs, seqlen, heads, dims)
@@ -128,6 +129,8 @@ class KVCacheObserver(GlobalAvailMixin):
         elif len(x.shape) == 3:
             # Shape: (seqlen, heads, dims)
             if x.size(1) != self.num_head or x.size(2) != self.head_dim:
+                print("x.shape =", x.shape)
+                print("expected = (seq_len, num_head, head_dim) =", self.num_head, self.head_dim)
                 raise RuntimeError('Unexpected dimensions for x, '
                                 'expected (seqlen, num_head, head_dim)')
             x = x.unsqueeze(0)  # Add batch dimension
