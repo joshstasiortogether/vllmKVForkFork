@@ -23,10 +23,16 @@ def split_decoder_layer_inputs(
             Each list contains individual elements from the batch.
     """
 
-    if not isinstance(args[0], torch.Tensor):
-        raise ValueError('The first argument must be a Tensor')
-
-    bs = args[0].size(0)
+    # Find the first tensor argument to determine batch size
+    bs = None
+    for arg in args:
+        if isinstance(arg, torch.Tensor):
+            bs = arg.size(0)
+            break
+    
+    if bs is None:
+        # If no tensor arguments found, treat as batch size 1
+        return [list(args)], [dict(kwargs)]
 
     batch_args = []
     batch_kwargs = []
