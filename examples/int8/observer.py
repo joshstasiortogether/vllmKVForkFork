@@ -116,7 +116,8 @@ class KVCacheObserver(GlobalAvailMixin):
         Args:
             x : Input tensor
         """
-        print("🔍 key.shape:", key.shape)
+        print("🔍 x.shape:", x.shape)
+
         # Handle different tensor shapes
         if len(x.shape) == 4:
             # Standard shape: (bs, heads, seqlen, dims) or (bs, seqlen, heads, dims)
