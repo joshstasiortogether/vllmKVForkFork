@@ -68,7 +68,12 @@ def concat_decoder_layer_outputs(
         Tuple[Any]: A tuple representing the batched output.
     """
 
+    if not batch_outputs:
+        return tuple()
+
     num_returns = len(batch_outputs[0])
+    if num_returns == 0:
+        return tuple()
 
     def is_past_key_value(data: Any) -> bool:
         """Check whether data is a past key-value pair.
@@ -89,6 +94,11 @@ def concat_decoder_layer_outputs(
 
     # Iterate over all types of return values.
     for i in range(num_returns):
+        # Skip None values
+        if batch_outputs[0][i] is None:
+            new_outputs.append(None)
+            continue
+            
         # Check if the current element is a past key-value pair.
         flag = is_past_key_value(batch_outputs[0][i])
         if flag:
@@ -97,8 +107,12 @@ def concat_decoder_layer_outputs(
             value = torch.cat([out[i][1] for out in batch_outputs])
             out_i = (key, value)
         else:
-            # If it's not a past key-value pair, concatenate directly.
-            out_i = torch.cat([out[i] for out in batch_outputs])
+            # If it's not a past key-value pair and not None, concatenate directly.
+            valid_outputs = [out[i] for out in batch_outputs if out[i] is not None]
+            if valid_outputs:
+                out_i = torch.cat(valid_outputs)
+            else:
+                out_i = None
         new_outputs.append(out_i)
 
     return tuple(new_outputs)
