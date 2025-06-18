@@ -17,14 +17,14 @@ do
     [ ! -d ${log_dir} ] && mkdir ${log_dir}
     log=${log_dir}llama2-7b-datasets_$i.log
     echo "i=$i, calib_dataset_path=${calib_dataset_path}, save_dir=${save_dir}, log=${log}"
-    python calibrate.py /home/model_weights/Llama2-7B-Instruct/ \
+    python calibrate.py ~/models/LLaMA-2-7B/ \
             --calib_dataset $i \
             --dataset_path  ${calib_dataset_path} \
             --work_dir ${save_dir} \
             --device cuda\
             --calib_samples 128 \
             --calib_seqlen 2048  2>&1|tee ${log} 
-    log=${log_dir}llama3-8b-datasets_${i}_json.log
+    log=${log_dir}llama2-7b-datasets_${i}_json.log
     save_dir_path=${work_dir}$i/
     python export_kv_params.py \
         --work_dir ${save_dir} \
