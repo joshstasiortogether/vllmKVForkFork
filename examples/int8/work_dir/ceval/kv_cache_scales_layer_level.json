@@ -1,5 +1,5 @@
 {
-    "model_type": "llama",
+    "model_type": "transformer",
     "kv_cache": {
         "dtype": "int8",
         "scaling_factor": {
