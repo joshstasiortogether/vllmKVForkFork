@@ -25,7 +25,7 @@ sampling_params = SamplingParams(temperature=0.8, top_p=0.95, max_tokens=200)
 llm = LLM(
     model="meta-llama/Llama-2-7b",
     tokenizer="meta-llama/Llama-2-7b",
-    model_type="llama",
+    # model_type="llama",
     dtype="auto",
     max_model_len=8192,
     tensor_parallel_size=1,
