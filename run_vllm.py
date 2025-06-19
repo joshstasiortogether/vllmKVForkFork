@@ -23,8 +23,8 @@ sampling_params = SamplingParams(temperature=0.8, top_p=0.95, max_tokens=200)
 
 # Configure KV cache quantization
 llm = LLM(
-    model="meta-llama/Llama-2-7b",
-    tokenizer="meta-llama/Llama-2-7b",
+    model="meta-llama/Llama-2-7b-hf",
+    tokenizer="meta-llama/Llama-2-7b-hf",
     # model_type="llama",
     dtype="auto",
     max_model_len=8192,
