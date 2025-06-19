@@ -27,7 +27,7 @@ llm = LLM(
     tokenizer="meta-llama/Llama-2-7b-hf",
     # model_type="llama",
     dtype="auto",
-    max_model_len=8192,
+    max_model_len=4096,
     tensor_parallel_size=1,
     enforce_eager=True,
     # KV cache quantization settings
